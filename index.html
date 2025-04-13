@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connect+ | Comunicação Interna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        .feedback-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+        }
+        .feedback-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .elogio {
+            border-left-color: #4CAF50;
+            background-color: #f0fff4;
+        }
+        .sugestao {
+            border-left-color: #2196F3;
+            background-color: #f0f9ff;
+        }
+        .critica {
+            border-left-color: #FF9800;
+            background-color: #fffaf0;
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .blur-overlay {
+            filter: blur(5px);
+            pointer-events: none;
+            user-select: none;
+        }
+        .login-required {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            background: rgba(255,255,255,0.9);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50">
+    <!-- Barra de Navegação -->
+    <nav class="bg-blue-600 text-white px-6 py-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-users text-2xl"></i>
+                <h1 class="text-xl font-bold">Connect<span class="text-green-300">+</span></h1>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a class="hover:text-green-300 cursor-pointer" onclick="mostrarTela('dashboard')">
+                    <i class="fas fa-home mr-1"></i> Início
+                </a>
+                <a class="hover:text-green-300 cursor-pointer" onclick="mostrarTela('enviar')">
+                    <i class="fas fa-paper-plane mr-1"></i> Enviar
+                </a>
+                <a class="hover:text-green-300 cursor-pointer" onclick="mostrarTela('historico')">
+                    <i class="fas fa-history mr-1"></i> Histórico
+                </a>
+                <a class="hover:text-green-300 cursor-pointer" onclick="mostrarTela('reconhecimento')">
+                    <i class="fas fa-trophy mr-1"></i> Reconhecimento
+                </a>
+                <a id="rh-link" class="hover:text-green-300 cursor-pointer hidden" onclick="mostrarTela('rh')">
+                    <i class="fas fa-user-tie mr-1"></i> RH
+                </a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div id="usuario-info" class="hidden">
+                    <span id="usuario-nome" class="font-medium"></span>
+                    <span id="usuario-cargo" class="ml-2 text-sm bg-blue-700 px-2 py-1 rounded"></span>
+                    <button onclick="sair()" class="ml-3 text-sm bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded">
+                        Sair
+                    </button>
+                </div>
+                <button id="btn-login" onclick="mostrarModalLogin()" 
+                    class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg font-medium">
+                    Entrar
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo Principal -->
+    <main class="container mx-auto px-4 py-8 relative">
+        <!-- Overlay para conteúdo restrito -->
+        <div id="login-overlay" class="hidden absolute inset-0 bg-white bg-opacity-50 z-10 flex items-center justify-center">
+            <div class="login-required">
+                <h3 class="text-xl font-bold text-blue-600 mb-4">Acesso Restrito</h3>
+                <p class="mb-4">Você precisa estar logado para acessar esta funcionalidade.</p>
+                <button onclick="mostrarModalLogin()" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    Fazer Login
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela de Boas-Vindas (para não logados) -->
+        <div id="welcome" class="tela">
+            <div class="bg-white p-8 rounded-lg shadow-md text-center">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="text-3xl font-bold text-blue-600 mb-6">Bem-vindo ao Connect+</h2>
+                    <p class="text-lg mb-6">
+                        Conectando pessoas e fortalecendo equipes através de uma comunicação transparente e eficiente.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-blue-50 p-6 rounded-lg">
+                            <i class="fas fa-star text-3xl text-green-500 mb-4"></i>
+                            <h3 class="text-xl font-semibold mb-2">Elogios</h3>
+                            <p>Reconheça publicamente os feitos dos seus colegas de trabalho.</p>
+                        </div>
+                        <div class="bg-blue-50 p-6 rounded-lg">
+                            <i class="fas fa-lightbulb text-3xl text-blue-500 mb-4"></i>
+                            <h3 class="text-xl font-semibold mb-2">Sugestões</h3>
+                            <p>Compartilhe ideias para melhorar processos e o ambiente de trabalho.</p>
+                        </div>
+                        <div class="bg-blue-50 p-6 rounded-lg">
+                            <i class="fas fa-comments text-3xl text-orange-500 mb-4"></i>
+                            <h3 class="text-xl font-semibold mb-2">Feedback Construtivo</h3>
+                            <p>Ajude no crescimento profissional com críticas bem fundamentadas.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4">Como funciona?</h3>
+                        <ol class="list-decimal list-inside space-y-2 text-left">
+                            <li>Faça login com suas credenciais corporativas</li>
+                            <li>Envie elogios, sugestões ou feedbacks construtivos</li>
+                            <li>Acompanhe seu histórico e reconhecimentos</li>
+                            <li>Participe da construção de um ambiente melhor</li>
+                        </ol>
+                    </div>
+                    
+                    <button onclick="mostrarModalLogin()" 
+                        class="mt-8 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg text-lg font-medium">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Acessar o Sistema
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela Dashboard -->
+        <div id="dashboard" class="tela hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 text-blue-600">
+                        <i class="fas fa-bullhorn mr-2"></i>Últimos Feedbacks
+                    </h3>
+                    <div id="ultimos-feedbacks" class="space-y-4">
+                        <!-- Feedbacks serão carregados aqui -->
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 text-green-600">
+                        <i class="fas fa-chart-line mr-2"></i>Seu Impacto
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-gray-600">Elogios Recebidos</p>
+                            <p class="text-3xl font-bold text-green-500" id="contador-elogios">0</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Feedbacks Enviados</p>
+                            <p class="text-3xl font-bold text-blue-500" id="contador-feedbacks">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4 text-purple-600">
+                        <i class="fas fa-trophy mr-2"></i>Top Colaboradores
+                    </h3>
+                    <div id="top-colaboradores" class="space-y-3">
+                        <!-- Ranking será carregado aqui -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-4 text-orange-500">
+                    <i class="fas fa-lightbulb mr-2"></i>Sugestões Recentes
+                </h3>
+                <div id="sugestoes-recentes" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Sugestões serão carregadas aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela Enviar Feedback -->
+        <div id="enviar" class="tela hidden">
+            <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold mb-6 text-blue-600">
+                    <i class="fas fa-paper-plane mr-2"></i>Enviar Feedback
+                </h2>
+                
+                <div class="mb-6">
+                    <div class="flex space-x-2 mb-4">
+                        <button onclick="selecionarTipoFeedback('elogio')" id="btn-elogio" 
+                            class="flex-1 py-2 px-4 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-medium">
+                            <i class="fas fa-star mr-2"></i>Elogio
+                        </button>
+                        <button onclick="selecionarTipoFeedback('sugestao')" id="btn-sugestao" 
+                            class="flex-1 py-2 px-4 rounded-lg border-2 border-blue-500 bg-blue-50 text-blue-700 font-medium">
+                            <i class="fas fa-lightbulb mr-2"></i>Sugestão
+                        </button>
+                        <button onclick="selecionarTipoFeedback('critica')" id="btn-critica" 
+                            class="flex-1 py-2 px-4 rounded-lg border-2 border-orange-500 bg-orange-50 text-orange-700 font-medium">
+                            <i class="fas fa-comment-dots mr-2"></i>Crítica Construtiva
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">Para:</label>
+                        <select id="feedback-para" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                            <option value="">Selecione um colega...</option>
+                            <!-- Colegas serão carregados aqui -->
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">Mensagem:</label>
+                        <textarea id="feedback-mensagem" rows="5" 
+                            class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300" 
+                            placeholder="Escreva seu feedback aqui..."></textarea>
+                    </div>
+                    
+                    <div class="flex items-center mb-6">
+                        <input type="checkbox" id="feedback-anonimo" class="mr-2">
+                        <label for="feedback-anonimo" class="text-gray-700">Enviar anonimamente</label>
+                    </div>
+                    
+                    <button onclick="enviarFeedback()" 
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium text-lg">
+                        <i class="fas fa-paper-plane mr-2"></i>Enviar Feedback
+                    </button>
+                </div>
+                
+                <div id="feedback-enviado" class="hidden text-center p-6 bg-green-50 rounded-lg">
+                    <i class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
+                    <h3 class="text-xl font-bold text-green-700 mb-2">Feedback Enviado!</h3>
+                    <p class="text-gray-600 mb-4">Sua mensagem foi enviada com sucesso.</p>
+                    <button onclick="resetarFormularioFeedback()" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg">
+                        Enviar Outro
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela Histórico -->
+        <div id="historico" class="tela hidden">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold mb-6 text-blue-600">
+                    <i class="fas fa-history mr-2"></i>Meu Histórico
+                </h2>
+                
+                <div class="flex mb-6">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold mb-2">Filtros:</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="filtrarHistorico('todos')" id="filtro-todos" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                                Todos
+                            </button>
+                            <button onclick="filtrarHistorico('elogio')" id="filtro-elogio" 
+                                class="px-4 py-2 bg-green-100 text-green-800 rounded-lg">
+                                Elogios
+                            </button>
+                            <button onclick="filtrarHistorico('sugestao')" id="filtro-sugestao" 
+                                class="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg">
+                                Sugestões
+                            </button>
+                            <button onclick="filtrarHistorico('critica')" id="filtro-critica" 
+                                class="px-4 py-2 bg-orange-100 text-orange-800 rounded-lg">
+                                Críticas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="historico-feedbacks" class="space-y-4">
+                    <!-- Histórico será carregado aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela Reconhecimento -->
+        <div id="reconhecimento" class="tela hidden">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold mb-6 text-blue-600">
+                    <i class="fas fa-trophy mr-2"></i>Reconhecimento
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-gradient-to-r from-green-400 to-green-600 p-6 rounded-lg text-white">
+                        <h3 class="text-xl font-bold mb-4">Colaborador do Mês</h3>
+                        <div class="flex items-center">
+                            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-user text-green-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-lg" id="colaborador-mes">-</p>
+                                <p class="text-sm" id="colaborador-dept">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-blue-400 to-blue-600 p-6 rounded-lg text-white">
+                        <h3 class="text-xl font-bold mb-4">Mais Elogiado</h3>
+                        <div class="flex items-center">
+                            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-star text-blue-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-lg" id="mais-elogiado">-</p>
+                                <p class="text-sm" id="mais-elogiado-dept">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-purple-400 to-purple-600 p-6 rounded-lg text-white">
+                        <h3 class="text-xl font-bold mb-4">Mais Sugestões</h3>
+                        <div class="flex items-center">
+                            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-lightbulb text-purple-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-lg" id="mais-sugestoes">-</p>
+                                <p class="text-sm" id="mais-sugestoes-dept">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="text-lg font-semibold mb-4">Últimos Elogios</h3>
+                <div id="ultimos-elogios" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Elogios serão carregados aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela RH -->
+        <div id="rh" class="tela hidden">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-blue-600">
+                        <i class="fas fa-user-tie mr-2"></i>Painel de RH
+                    </h2>
+                    <button onclick="mostrarModalCadastroFuncionario()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-plus mr-2"></i>Novo Funcionário
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                        <p class="text-gray-600">Total de Funcionários</p>
+                        <p class="text-2xl font-bold" id="total-funcionarios">0</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                        <p class="text-gray-600">Elogios este Mês</p>
+                        <p class="text-2xl font-bold" id="elogios-mes">0</p>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                        <p class="text-gray-600">Sugestões este Mês</p>
+                        <p class="text-2xl font-bold" id="sugestoes-mes">0</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+                        <p class="text-gray-600">Departamentos</p>
+                        <p class="text-2xl font-bold" id="total-departamentos">0</p>
+                    </div>
+                </div>
+                
+                <h3 class="text-lg font-semibold mb-4">Funcionários</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-3 px-4 text-left">Nome</th>
+                                <th class="py-3 px-4 text-left">Departamento</th>
+                                <th class="py-3 px-4 text-left">Cargo</th>
+                                <th class="py-3 px-4 text-left">Elogios</th>
+                                <th class="py-3 px-4 text-left">Sugestões</th>
+                                <th class="py-3 px-4 text-left">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-funcionarios">
+                            <!-- Funcionários serão carregados aqui -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold mb-4">Relatórios</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-4 rounded-lg border">
+                            <h4 class="font-medium mb-2">Elogios por Departamento</h4>
+                            <div id="grafico-elogios-dept" class="h-64">
+                                <!-- Gráfico será renderizado aqui -->
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border">
+                            <h4 class="font-medium mb-2">Tipos de Feedback</h4>
+                            <div id="grafico-tipos-feedback" class="h-64">
+                                <!-- Gráfico será renderizado aqui -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Login -->
+    <div id="modal-login" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-blue-600">Acesse o Connect+</h3>
+                <button onclick="fecharModal('modal-login')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="form-login" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 mb-2">Email:</label>
+                    <input type="email" id="login-email" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Senha:</label>
+                    <input type="password" id="login-senha" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="lembrar" class="mr-2">
+                        <label for="lembrar" class="text-sm text-gray-600">Lembrar de mim</label>
+                    </div>
+                    <a href="#" class="text-sm text-blue-600 hover:underline">Esqueceu a senha?</a>
+                </div>
+                <button type="submit" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium">
+                    Entrar
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center">
+                <p class="text-gray-600">Novo por aqui? <a onclick="mostrarModalCadastro()" 
+                    class="text-blue-600 hover:underline cursor-pointer">Cadastre-se</a></p>
+            </div>
+            
+            <div class="mt-6">
+                <button onclick="mostrarContasTeste()" 
+                    class="w-full text-center text-sm text-gray-600 hover:text-blue-600">
+                    Usar conta de teste <i class="fas fa-chevron-down ml-1"></i>
+                </button>
+                <div id="contas-teste" class="mt-2 hidden">
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-sm font-medium mb-2">Contas de teste:</p>
+                        <div class="space-y-2">
+                            <button type="button" onclick="preencherContaTeste('funcionario@empresa.com', '123456')" 
+                                class="block w-full text-left p-2 bg-white rounded border hover:bg-gray-100">
+                                Funcionário (123456)
+                            </button>
+                            <button type="button" onclick="preencherContaTeste('gerente@empresa.com', 'gerente123')" 
+                                class="block w-full text-left p-2 bg-white rounded border hover:bg-gray-100">
+                                Gerente (gerente123)
+                            </button>
+                            <button type="button" onclick="preencherContaTeste('rh@empresa.com', 'rh123')" 
+                                class="block w-full text-left p-2 bg-white rounded border hover:bg-gray-100">
+                                RH (rh123)
+                            </button>
+                            <button type="button" onclick="preencherContaTeste('ceo@empresa.com', 'ceo123')" 
+                                class="block w-full text-left p-2 bg-white rounded border hover:bg-gray-100">
+                                CEO (ceo123)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Cadastro -->
+    <div id="modal-cadastro" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-blue-600">Cadastro</h3>
+                <button onclick="fecharModal('modal-cadastro')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="form-cadastro" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 mb-2">Nome Completo:</label>
+                    <input type="text" id="cadastro-nome" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Email:</label>
+                    <input type="email" id="cadastro-email" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Senha:</label>
+                    <input type="password" id="cadastro-senha" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Departamento:</label>
+                    <select id="cadastro-departamento" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                        <option value="">Selecione...</option>
+                        <option value="TI">TI</option>
+                        <option value="RH">RH</option>
+                        <option value="Vendas">Vendas</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Financeiro">Financeiro</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Cargo:</label>
+                    <select id="cadastro-cargo" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                        <option value="">Selecione...</option>
+                        <option value="Colaborador">Colaborador</option>
+                        <option value="Gerente">Gerente</option>
+                        <option value="RH">RH</option>
+                        <option value="CEO">CEO</option>
+                    </select>
+                </div>
+                <button type="submit" 
+                    class="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium">
+                    Cadastrar
+                </button>
+            </form>
+            
+            <div class="mt-4 text-center">
+                <p class="text-gray-600">Já tem uma conta? <a onclick="mostrarModalLogin()" 
+                    class="text-blue-600 hover:underline cursor-pointer">Faça login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cadastro Funcionário (RH) -->
+    <div id="modal-cadastro-funcionario" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-blue-600">Novo Funcionário</h3>
+                <button onclick="fecharModal('modal-cadastro-funcionario')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="form-cadastro-funcionario" class="space-y-4">
+                <input type="hidden" id="funcionario-id">
+                <div>
+                    <label class="block text-gray-700 mb-2">Nome Completo:</label>
+                    <input type="text" id="funcionario-nome" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Email:</label>
+                    <input type="email" id="funcionario-email" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div id="funcionario-senha-container">
+                    <label class="block text-gray-700 mb-2">Senha:</label>
+                    <input type="password" id="funcionario-senha"
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Departamento:</label>
+                    <select id="funcionario-departamento" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                        <option value="">Selecione...</option>
+                        <option value="TI">TI</option>
+                        <option value="RH">RH</option>
+                        <option value="Vendas">Vendas</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Financeiro">Financeiro</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Cargo:</label>
+                    <select id="funcionario-cargo" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                        <option value="">Selecione...</option>
+                        <option value="Colaborador">Colaborador</option>
+                        <option value="Gerente">Gerente</option>
+                        <option value="RH">RH</option>
+                        <option value="CEO">CEO</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2">Data de Admissão:</label>
+                    <input type="date" id="funcionario-data-admissao" required
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300">
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" 
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium">
+                        Salvar
+                    </button>
+                    <button type="button" onclick="fecharModal('modal-cadastro-funcionario')"
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-4 rounded-lg font-medium">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Dados da aplicação
+        let usuarioLogado = null;
+        let feedbacks = [];
+        let funcionarios = [];
+        let tipoFeedbackSelecionado = 'elogio';
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarDadosIniciais();
+            
+            // Event listeners
+            document.getElementById('form-login').addEventListener('submit', fazerLogin);
+            document.getElementById('form-cadastro').addEventListener('submit', cadastrarUsuario);
+            document.getElementById('form-cadastro-funcionario').addEventListener('submit', salvarFuncionario);
+            
+            // Mostrar tela inicial baseada no estado de login
+            if (usuarioLogado) {
+                mostrarTela('dashboard');
+            } else {
+                mostrarTela('welcome');
+            }
+        });
+        
+        // Funções de navegação
+        function mostrarTela(id) {
+            // Verifica se o usuário tem permissão para acessar a tela
+            if (id !== 'welcome' && !usuarioLogado) {
+                document.getElementById('login-overlay').classList.remove('hidden');
+                return;
+            }
+            
+            // Verifica acesso especial para RH
+            if (id === 'rh' && !temAcessoRH()) {
+                alert('Acesso restrito ao RH, Gerentes e CEO.');
+                return;
+            }
+            
+            // Oculta o overlay se estiver visível
+            document.getElementById('login-overlay').classList.add('hidden');
+            
+            // Esconde todas as telas
+            document.querySelectorAll('.tela').forEach(tela => {
+                tela.classList.add('hidden');
+            });
+            
+            // Mostra a tela solicitada
+            document.getElementById(id).classList.remove('hidden');
+            
+            // Atualiza dados específicos da tela
+            if (id === 'dashboard') {
+                atualizarDashboard();
+            } else if (id === 'historico') {
+                carregarHistorico();
+            } else if (id === 'reconhecimento') {
+                carregarDadosReconhecimento();
+            } else if (id === 'rh') {
+                carregarDadosRH();
+            } else if (id === 'enviar') {
+                carregarDestinatarios();
+            }
+        }
+        
+        // Funções de modal
+        function mostrarModalLogin() {
+            fecharTodosModais();
+            document.getElementById('modal-login').classList.remove('hidden');
+        }
+        
+        function mostrarModalCadastro() {
+            fecharTodosModais();
+            document.getElementById('modal-cadastro').classList.remove('hidden');
+        }
+        
+        function mostrarModalCadastroFuncionario() {
+            fecharTodosModais();
+            document.getElementById('funcionario-id').value = '';
+            document.getElementById('funcionario-nome').value = '';
+            document.getElementById('funcionario-email').value = '';
+            document.getElementById('funcionario-senha').value = '';
+            document.getElementById('funcionario-departamento').value = '';
+            document.getElementById('funcionario-cargo').value = '';
+            document.getElementById('funcionario-data-admissao').value = new Date().toISOString().split('T')[0];
+            document.getElementById('funcionario-senha-container').style.display = 'block';
+            document.getElementById('modal-cadastro-funcionario').classList.remove('hidden');
+        }
+        
+        function fecharModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+        
+        function fecharTodosModais() {
+            document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+                modal.classList.add('hidden');
+            });
+        }
+        
+        // Funções de autenticação
+        function fazerLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+            
+            // Verifica credenciais
+            const conta = funcionarios.find(f => f.email === email && f.senha === senha);
+            
+            if (conta) {
+                usuarioLogado = {
+                    id: conta.id,
+                    nome: conta.nome,
+                    email: conta.email,
+                    departamento: conta.departamento,
+                    cargo: conta.cargo,
+                    dataAdmissao: conta.dataAdmissao
+                };
+                
+                atualizarInterfaceUsuario();
+                fecharModal('modal-login');
+                mostrarTela('dashboard');
+                
+                // Resetar formulário
+                document.getElementById('login-email').value = '';
+                document.getElementById('login-senha').value = '';
+                document.getElementById('contas-teste').classList.add('hidden');
+            } else {
+                alert('Credenciais inválidas. Tente novamente.');
+            }
+        }
+        
+        function cadastrarUsuario(e) {
+            e.preventDefault();
+            const nome = document.getElementById('cadastro-nome').value;
+            const email = document.getElementById('cadastro-email').value;
+            const senha = document.getElementById('cadastro-senha').value;
+            const departamento = document.getElementById('cadastro-departamento').value;
+            const cargo = document.getElementById('cadastro-cargo').value;
+            
+            // Verifica se o email já está cadastrado
+            if (funcionarios.some(f => f.email === email)) {
+                alert('Este email já está cadastrado.');
+                return;
+            }
+            
+            // Adiciona novo funcionário
+            const novoId = funcionarios.length > 0 ? Math.max(...funcionarios.map(f => f.id)) + 1 : 1;
+            const novoFuncionario = {
+                id: novoId,
+                nome: nome,
+                email: email,
+                senha: senha,
+                departamento: departamento,
+                cargo: cargo,
+                dataAdmissao: new Date().toISOString().split('T')[0],
+                status: 'Ativo'
+            };
+            
+            funcionarios.push(novoFuncionario);
+            
+            // Faz login automaticamente
+            usuarioLogado = {
+                id: novoId,
+                nome: nome,
+                email: email,
+                departamento: departamento,
+                cargo: cargo,
+                dataAdmissao: novoFuncionario.dataAdmissao
+            };
+            
+            atualizarInterfaceUsuario();
+            fecharModal('modal-cadastro');
+            mostrarTela('dashboard');
+            
+            // Resetar formulário
+            document.getElementById('cadastro-nome').value = '';
+            document.getElementById('cadastro-email').value = '';
+            document.getElementById('cadastro-senha').value = '';
+            document.getElementById('cadastro-departamento').value = '';
+            document.getElementById('cadastro-cargo').value = '';
+        }
+        
+        function sair() {
+            usuarioLogado = null;
+            atualizarInterfaceUsuario();
+            mostrarTela('welcome');
+        }
+        
+        function atualizarInterfaceUsuario() {
+            const usuarioInfo = document.getElementById('usuario-info');
+            const btnLogin = document.getElementById('btn-login');
+            const rhLink = document.getElementById('rh-link');
+            
+            if (usuarioLogado) {
+                document.getElementById('usuario-nome').textContent = usuarioLogado.nome;
+                
+                // Define a cor do cargo baseado no nível
+                let cargoClass = 'bg-gray-500';
+                if (usuarioLogado.cargo === 'Gerente') cargoClass = 'bg-blue-500';
+                if (usuarioLogado.cargo === 'RH') cargoClass = 'bg-purple-500';
+                if (usuarioLogado.cargo === 'CEO') cargoClass = 'bg-yellow-500';
+                
+                document.getElementById('usuario-cargo').textContent = usuarioLogado.cargo;
+                document.getElementById('usuario-cargo').className = `ml-2 text-sm text-white px-2 py-1 rounded ${cargoClass}`;
+                
+                usuarioInfo.classList.remove('hidden');
+                btnLogin.classList.add('hidden');
+                
+                // Mostra link de RH apenas para usuários com acesso
+                if (temAcessoRH()) {
+                    rhLink.classList.remove('hidden');
+                } else {
+                    rhLink.classList.add('hidden');
+                }
+            } else {
+                usuarioInfo.classList.add('hidden');
+                btnLogin.classList.remove('hidden');
+                rhLink.classList.add('hidden');
+            }
+        }
+        
+        // Funções de verificação de acesso
+        function temAcessoRH() {
+            return usuarioLogado && (usuarioLogado.cargo === 'RH' || usuarioLogado.cargo === 'CEO' || usuarioLogado.cargo === 'Gerente');
+        }
+        
+        function verificarAcessoRH() {
+            if (!temAcessoRH()) {
+                alert('Acesso restrito ao RH, Gerentes e CEO.');
+                return false;
+            }
+            return true;
+        }
+        
+        // Funções de feedback
+        function selecionarTipoFeedback(tipo) {
+            tipoFeedbackSelecionado = tipo;
+            
+            // Atualiza estilos dos botões
+            document.getElementById('btn-elogio').classList.remove('bg-green-100', 'text-green-700');
+            document.getElementById('btn-sugestao').classList.remove('bg-blue-100', 'text-blue-700');
+            document.getElementById('btn-critica').classList.remove('bg-orange-100', 'text-orange-700');
+            
+            document.getElementById('btn-elogio').classList.add('border-green-500', 'bg-green-50');
+            document.getElementById('btn-sugestao').classList.add('border-blue-500', 'bg-blue-50');
+            document.getElementById('btn-critica').classList.add('border-orange-500', 'bg-orange-50');
+            
+            // Destaca o selecionado
+            if (tipo === 'elogio') {
+                document.getElementById('btn-elogio').classList.add('bg-green-100', 'text-green-700');
+            } else if (tipo === 'sugestao') {
+                document.getElementById('btn-sugestao').classList.add('bg-blue-100', 'text-blue-700');
+            } else {
+                document.getElementById('btn-critica').classList.add('bg-orange-100', 'text-orange-700');
+            }
+        }
+        
+        function carregarDestinatarios() {
+            if (!usuarioLogado) return;
+            
+            const select = document.getElementById('feedback-para');
+            select.innerHTML = '<option value="">Selecione um colega...</option>';
+            
+            funcionarios.forEach(funcionario => {
+                if (funcionario.id !== usuarioLogado.id) {
+                    const option = document.createElement('option');
+                    option.value = funcionario.id;
+                    option.textContent = `${funcionario.nome} (${funcionario.departamento})`;
+                    select.appendChild(option);
+                }
+            });
+        }
+        
+        function enviarFeedback() {
+            if (!usuarioLogado) {
+                mostrarModalLogin();
+                return;
+            }
+            
+            const paraId = document.getElementById('feedback-para').value;
+            const mensagem = document.getElementById('feedback-mensagem').value;
+            const anonimo = document.getElementById('feedback-anonimo').checked;
+            
+            if (!paraId || !mensagem) {
+                alert('Por favor, selecione um destinatário e escreva sua mensagem.');
+                return;
+            }
+            
+            const destinatario = funcionarios.find(f => f.id == paraId);
+            const novoFeedback = {
+                id: feedbacks.length > 0 ? Math.max(...feedbacks.map(f => f.id)) + 1 : 1,
+                tipo: tipoFeedbackSelecionado,
+                de: anonimo ? null : usuarioLogado.id,
+                para: paraId,
+                mensagem: mensagem,
+                data: new Date().toISOString()
+            };
+            
+            feedbacks.push(novoFeedback);
+            
+            // Atualiza contadores
+            if (tipoFeedbackSelecionado === 'elogio') {
+                const elogios = document.getElementById('contador-elogios');
+                elogios.textContent = parseInt(elogios.textContent) + 1;
+            }
+            
+            const feedbacksEnviados = document.getElementById('contador-feedbacks');
+            feedbacksEnviados.textContent = parseInt(feedbacksEnviados.textContent) + 1;
+            
+            // Mostra confirmação
+            document.getElementById('feedback-enviado').classList.remove('hidden');
+            document.querySelector('.form-mensagem').style.display = 'none';
+            
+            // Atualiza dashboard
+            atualizarDashboard();
+        }
+        
+        function resetarFormularioFeedback() {
+            document.getElementById('feedback-enviado').classList.add('hidden');
+            document.querySelector('.form-mensagem').style.display = 'block';
+            document.getElementById('feedback-mensagem').value = '';
+            document.getElementById('feedback-anonimo').checked = false;
+        }
+        
+        // Funções de carregamento de dados
+        function carregarDadosIniciais() {
+            // Dados de exemplo
+            funcionarios = [
+                { id: 1, nome: "João Silva", email: "funcionario@empresa.com", senha: "123456", departamento: "TI", cargo: "Colaborador", dataAdmissao: "2020-05-15", status: "Ativo" },
+                { id: 2, nome: "Maria Santos", email: "rh@empresa.com", senha: "rh123", departamento: "RH", cargo: "RH", dataAdmissao: "2019-11-20", status: "Ativo" },
+                { id: 3, nome: "Carlos Oliveira", email: "gerente@empresa.com", senha: "gerente123", departamento: "Vendas", cargo: "Gerente", dataAdmissao: "2021-02-10", status: "Ativo" },
+                { id: 4, nome: "Ana Pereira", email: "ceo@empresa.com", senha: "ceo123", departamento: "Marketing", cargo: "CEO", dataAdmissao: "2022-01-05", status: "Ativo" }
+            ];
+            
+            feedbacks = [
+                { id: 1, tipo: "elogio", de: 2, para: 1, mensagem: "Excelente trabalho no projeto X!", data: "2023-05-10" },
+                { id: 2, tipo: "sugestao", de: 3, para: null, mensagem: "Sugiro melhorar o sistema de relatórios", data: "2023-05-09" },
+                { id: 3, tipo: "critica", de: 4, para: 1, mensagem: "Poderia ser mais pontual nas reuniões", data: "2023-05-08" },
+                { id: 4, tipo: "elogio", de: 1, para: 3, mensagem: "Ótima apresentação no cliente Y", data: "2023-05-07" }
+            ];
+        }
+        
+        function atualizarDashboard() {
+            // Últimos feedbacks
+            const ultimosFeedbacks = document.getElementById('ultimos-feedbacks');
+            ultimosFeedbacks.innerHTML = '';
+            
+            const feedbacksRecentes = [...feedbacks].reverse().slice(0, 3);
+            feedbacksRecentes.forEach(feedback => {
+                const de = feedback.de ? funcionarios.find(f => f.id == feedback.de) : null;
+                const para = funcionarios.find(f => f.id == feedback.para);
+                
+                const card = document.createElement('div');
+                card.className = 'feedback-card p-4 rounded-lg mb-3 ' + 
+                    (feedback.tipo === 'elogio' ? 'elogio' : 
+                     feedback.tipo === 'sugestao' ? 'sugestao' : 'critica');
+                
+                card.innerHTML = `
+                    <div class="flex justify-between">
+                        <p class="font-medium">${feedback.tipo === 'sugestao' ? 'Sugestão' : 
+                          (de ? de.nome : 'Anônimo') + ' para ' + (para ? para.nome : 'Todos')}</p>
+                        <small class="text-gray-500">${feedback.data.split('T')[0]}</small>
+                    </div>
+                    <p class="mt-2">${feedback.mensagem}</p>
+                `;
+                
+                ultimosFeedbacks.appendChild(card);
+            });
+            
+            // Top colaboradores (baseado em elogios recebidos)
+            const topColaboradores = document.getElementById('top-colaboradores');
+            topColaboradores.innerHTML = '';
+            
+            const colaboradoresComElogios = funcionarios.map(funcionario => {
+                const elogios = feedbacks.filter(f => f.para == funcionario.id && f.tipo === 'elogio').length;
+                return { ...funcionario, elogios };
+            }).filter(f => f.elogios > 0).sort((a, b) => b.elogios - a.elogios).slice(0, 3);
+            
+            if (colaboradoresComElogios.length > 0) {
+                colaboradoresComElogios.forEach((funcionario, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center';
+                    div.innerHTML = `
+                        <span class="text-gray-500 mr-2">${index + 1}.</span>
+                        <span class="font-medium">${funcionario.nome}</span>
+                        <span class="ml-auto bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                            ${funcionario.elogios} elogio(s)
+                        </span>
+                    `;
+                    topColaboradores.appendChild(div);
+                });
+            } else {
+                topColaboradores.innerHTML = '<p class="text-gray-500">Nenhum elogio registrado ainda.</p>';
+            }
+            
+            // Sugestões recentes
+            const sugestoesRecentes = document.getElementById('sugestoes-recentes');
+            sugestoesRecentes.innerHTML = '';
+            
+            const sugestoes = feedbacks.filter(f => f.tipo === 'sugestao').reverse().slice(0, 4);
+            sugestoes.forEach(sugestao => {
+                const de = sugestao.de ? funcionarios.find(f => f.id == sugestao.de) : null;
+                
+                const card = document.createElement('div');
+                card.className = 'feedback-card p-4 rounded-lg sugestao';
+                card.innerHTML = `
+                    <div class="flex justify-between">
+                        <p class="font-medium">${de ? de.nome : 'Anônimo'}</p>
+                        <small class="text-gray-500">${sugestao.data.split('T')[0]}</small>
+                    </div>
+                    <p class="mt-2">${sugestao.mensagem}</p>
+                `;
+                
+                sugestoesRecentes.appendChild(card);
+            });
+            
+            if (sugestoes.length === 0) {
+                sugestoesRecentes.innerHTML = '<p class="text-gray-500 col-span-2">Nenhuma sugestão registrada ainda.</p>';
+            }
+        }
+        
+        function carregarHistorico() {
+            if (!usuarioLogado) return;
+            
+            const historicoContainer = document.getElementById('historico-feedbacks');
+            historicoContainer.innerHTML = '';
+            
+            const meusFeedbacks = feedbacks.filter(f => f.de == usuarioLogado.id);
+            
+            if (meusFeedbacks.length > 0) {
+                meusFeedbacks.reverse().forEach(feedback => {
+                    const para = feedback.para ? funcionarios.find(f => f.id == feedback.para) : null;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'feedback-card p-4 rounded-lg mb-3 ' + 
+                        (feedback.tipo === 'elogio' ? 'elogio' : 
+                         feedback.tipo === 'sugestao' ? 'sugestao' : 'critica');
+                    
+                    div.innerHTML = `
+                        <div class="flex justify-between">
+                            <p class="font-medium">
+                                ${feedback.tipo === 'sugestao' ? 'Sugestão' : 'Para ' + (para ? para.nome : 'Todos')}
+                            </p>
+                            <small class="text-gray-500">${feedback.data.split('T')[0]}</small>
+                        </div>
+                        <p class="mt-2">${feedback.mensagem}</p>
+                    `;
+                    
+                    historicoContainer.appendChild(div);
+                });
+            } else {
+                historicoContainer.innerHTML = '<p class="text-gray-500">Você ainda não enviou nenhum feedback.</p>';
+            }
+        }
+        
+        function carregarDadosReconhecimento() {
+            // Colaborador do mês (simulado)
+            document.getElementById('colaborador-mes').textContent = 'Maria Santos';
+            document.getElementById('colaborador-dept').textContent = 'RH';
+            
+            // Mais elogiado
+            const maisElogiado = funcionarios.map(f => {
+                const elogios = feedbacks.filter(fb => fb.para == f.id && fb.tipo === 'elogio').length;
+                return { ...f, elogios };
+            }).reduce((a, b) => a.elogios > b.elogios ? a : b, { elogios: 0 });
+            
+            if (maisElogiado.elogios > 0) {
+                document.getElementById('mais-elogiado').textContent = maisElogiado.nome;
+                document.getElementById('mais-elogiado-dept').textContent = maisElogiado.departamento;
+            }
+            
+            // Mais sugestões
+            const maisSugestoes = funcionarios.map(f => {
+                const sugestoes = feedbacks.filter(fb => fb.de == f.id && fb.tipo === 'sugestao').length;
+                return { ...f, sugestoes };
+            }).reduce((a, b) => a.sugestoes > b.sugestoes ? a : b, { sugestoes: 0 });
+            
+            if (maisSugestoes.sugestoes > 0) {
+                document.getElementById('mais-sugestoes').textContent = maisSugestoes.nome;
+                document.getElementById('mais-sugestoes-dept').textContent = maisSugestoes.departamento;
+            }
+            
+            // Últimos elogios
+            const ultimosElogios = document.getElementById('ultimos-elogios');
+            ultimosElogios.innerHTML = '';
+            
+            const elogios = feedbacks.filter(f => f.tipo === 'elogio').reverse().slice(0, 4);
+            elogios.forEach(elogio => {
+                const de = elogio.de ? funcionarios.find(f => f.id == elogio.de) : null;
+                const para = funcionarios.find(f => f.id == elogio.para);
+                
+                const card = document.createElement('div');
+                card.className = 'feedback-card p-4 rounded-lg elogio';
+                card.innerHTML = `
+                    <div class="flex justify-between">
+                        <p class="font-medium">${de ? de.nome : 'Anônimo'} para ${para.nome}</p>
+                        <small class="text-gray-500">${elogio.data.split('T')[0]}</small>
+                    </div>
+                    <p class="mt-2">${elogio.mensagem}</p>
+                    <div class="mt-2 text-right">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                `;
+                
+                ultimosElogios.appendChild(card);
+            });
+            
+            if (elogios.length === 0) {
+                ultimosElogios.innerHTML = '<p class="text-gray-500 col-span-2">Nenhum elogio registrado ainda.</p>';
+            }
+        }
+        
+        function carregarDadosRH() {
+            if (!verificarAcessoRH()) return;
+            
+            // Estatísticas gerais
+            document.getElementById('total-funcionarios').textContent = funcionarios.length;
+            document.getElementById('elogios-mes').textContent = feedbacks.filter(f => f.tipo === 'elogio').length;
+            document.getElementById('sugestoes-mes').textContent = feedbacks.filter(f => f.tipo === 'sugestao').length;
+            
+            const departamentos = [...new Set(funcionarios.map(f => f.departamento))];
+            document.getElementById('total-departamentos').textContent = departamentos.length;
+            
+            // Tabela de funcionários
+            const tabela = document.getElementById('tabela-funcionarios');
+            tabela.innerHTML = '';
+            
+            funcionarios.forEach(funcionario => {
+                const elogios = feedbacks.filter(f => f.para == funcionario.id && f.tipo === 'elogio').length;
+                const sugestoes = feedbacks.filter(f => f.de == funcionario.id && f.tipo === 'sugestao').length;
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b';
+                row.innerHTML = `
+                    <td class="py-3 px-4">${funcionario.nome}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 rounded-full text-xs ${getDeptColorClass(funcionario.departamento)}">
+                            ${funcionario.departamento}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">${funcionario.cargo}</td>
+                    <td class="py-3 px-4">${elogios}</td>
+                    <td class="py-3 px-4">${sugestoes}</td>
+                    <td class="py-3 px-4">
+                        <button onclick="editarFuncionario(${funcionario.id})" class="text-blue-600 hover:text-blue-800 mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="confirmarExclusaoFuncionario(${funcionario.id})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tabela.appendChild(row);
+            });
+            
+            // Gráficos (simulados)
+            document.getElementById('grafico-elogios-dept').innerHTML = 
+                '<p class="text-gray-500 text-center py-8">Gráfico de elogios por departamento</p>';
+            document.getElementById('grafico-tipos-feedback').innerHTML = 
+                '<p class="text-gray-500 text-center py-8">Gráfico de tipos de feedback</p>';
+        }
+        
+        // Funções auxiliares RH
+        function editarFuncionario(id) {
+            if (!verificarAcessoRH()) return;
+            
+            const funcionario = funcionarios.find(f => f.id == id);
+            if (funcionario) {
+                document.getElementById('funcionario-id').value = funcionario.id;
+                document.getElementById('funcionario-nome').value = funcionario.nome;
+                document.getElementById('funcionario-email').value = funcionario.email;
+                document.getElementById('funcionario-departamento').value = funcionario.departamento;
+                document.getElementById('funcionario-cargo').value = funcionario.cargo;
+                document.getElementById('funcionario-data-admissao').value = funcionario.dataAdmissao;
+                document.getElementById('funcionario-senha-container').style.display = 'none';
+                
+                mostrarModalCadastroFuncionario();
+            }
+        }
+        
+        function salvarFuncionario(e) {
+            e.preventDefault();
+            
+            if (!verificarAcessoRH()) return;
+            
+            const id = document.getElementById('funcionario-id').value;
+            const nome = document.getElementById('funcionario-nome').value;
+            const email = document.getElementById('funcionario-email').value;
+            const senha = document.getElementById('funcionario-senha').value;
+            const departamento = document.getElementById('funcionario-departamento').value;
+            const cargo = document.getElementById('funcionario-cargo').value;
+            const dataAdmissao = document.getElementById('funcionario-data-admissao').value;
+            
+            if (id) {
+                // Edição
+                const index = funcionarios.findIndex(f => f.id == id);
+                if (index !== -1) {
+                    funcionarios[index] = {
+                        ...funcionarios[index],
+                        nome: nome,
+                        email: email,
+                        departamento: departamento,
+                        cargo: cargo,
+                        dataAdmissao: dataAdmissao
+                    };
+                    
+                    if (senha) {
+                        funcionarios[index].senha = senha;
+                    }
+                }
+            } else {
+                // Novo
+                const novoId = funcionarios.length > 0 ? Math.max(...funcionarios.map(f => f.id)) + 1 : 1;
+                funcionarios.push({
+                    id: novoId,
+                    nome: nome,
+                    email: email,
+                    senha: senha,
+                    departamento: departamento,
+                    cargo: cargo,
+                    dataAdmissao: dataAdmissao,
+                    status: 'Ativo'
+                });
+            }
+            
+            fecharModal('modal-cadastro-funcionario');
+            carregarDadosRH();
+        }
+        
+        function confirmarExclusaoFuncionario(id) {
+            if (!verificarAcessoRH()) return;
+            
+            if (confirm('Tem certeza que deseja remover este funcionário?')) {
+                funcionarios = funcionarios.filter(f => f.id != id);
+                feedbacks = feedbacks.filter(f => f.de != id && f.para != id);
+                carregarDadosRH();
+            }
+        }
+        
+        function getDeptColorClass(dept) {
+            const colors = {
+                'RH': 'bg-purple-100 text-purple-800',
+                'TI': 'bg-blue-100 text-blue-800',
+                'Vendas': 'bg-green-100 text-green-800',
+                'Marketing': 'bg-pink-100 text-pink-800',
+                'Financeiro': 'bg-yellow-100 text-yellow-800'
+            };
+            return colors[dept] || 'bg-gray-100 text-gray-800';
+        }
+        
+        // Funções auxiliares
+        function mostrarContasTeste() {
+            document.getElementById('contas-teste').classList.toggle('hidden');
+        }
+        
+        function preencherContaTeste(email, senha) {
+            document.getElementById('login-email').value = email;
+            document.getElementById('login-senha').value = senha;
+            document.getElementById('contas-teste').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
