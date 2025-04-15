@@ -663,7 +663,7 @@
             
             // Verifica acesso especial para RH
             if (id === 'rh' && !temAcessoRH()) {
-                alert('Acesso restrito ao RH, Gerentes e CEO.');
+                alert('Acesso restrito ao RH e CEO.');
                 return;
             }
             
@@ -850,12 +850,24 @@
         
         // Funções de verificação de acesso
         function temAcessoRH() {
-            return usuarioLogado && (usuarioLogado.cargo === 'RH' || usuarioLogado.cargo === 'CEO' || usuarioLogado.cargo === 'Gerente');
+            return usuarioLogado && (usuarioLogado.cargo === 'RH' || usuarioLogado.cargo === 'CEO');
+        }
+        
+        function isGerenteDoDepartamento(departamento) {
+            return usuarioLogado && 
+                   usuarioLogado.cargo === 'Gerente' && 
+                   usuarioLogado.departamento === departamento;
+        }
+        
+        function temAcessoGestaoDepartamento(departamento) {
+            return temAcessoRH() || 
+                   isGerenteDoDepartamento(departamento) || 
+                   (usuarioLogado && usuarioLogado.cargo === 'CEO');
         }
         
         function verificarAcessoRH() {
             if (!temAcessoRH()) {
-                alert('Acesso restrito ao RH, Gerentes e CEO.');
+                alert('Acesso restrito ao RH e CEO.');
                 return false;
             }
             return true;
@@ -1144,21 +1156,42 @@
         }
         
         function carregarDadosRH() {
-            if (!verificarAcessoRH()) return;
+            if (!temAcessoRH()) {
+                alert('Acesso restrito ao RH e CEO.');
+                return;
+            }
             
-            // Estatísticas gerais
-            document.getElementById('total-funcionarios').textContent = funcionarios.length;
-            document.getElementById('elogios-mes').textContent = feedbacks.filter(f => f.tipo === 'elogio').length;
-            document.getElementById('sugestoes-mes').textContent = feedbacks.filter(f => f.tipo === 'sugestao').length;
+            // Estatísticas gerais - apenas RH e CEO veem todos os departamentos
+            if (temAcessoRH() || usuarioLogado.cargo === 'CEO') {
+                document.getElementById('total-funcionarios').textContent = funcionarios.length;
+                document.getElementById('elogios-mes').textContent = feedbacks.filter(f => f.tipo === 'elogio').length;
+                document.getElementById('sugestoes-mes').textContent = feedbacks.filter(f => f.tipo === 'sugestao').length;
+                
+                const departamentos = [...new Set(funcionarios.map(f => f.departamento))];
+                document.getElementById('total-departamentos').textContent = departamentos.length;
+            } else {
+                // Gerente vê apenas seu departamento
+                const deptFuncionarios = funcionarios.filter(f => f.departamento === usuarioLogado.departamento);
+                document.getElementById('total-funcionarios').textContent = deptFuncionarios.length;
+                document.getElementById('elogios-mes').textContent = feedbacks.filter(f => 
+                    f.tipo === 'elogio' && deptFuncionarios.some(df => df.id === f.para)).length;
+                document.getElementById('sugestoes-mes').textContent = feedbacks.filter(f => 
+                    f.tipo === 'sugestao' && deptFuncionarios.some(df => df.id === f.de)).length;
+                document.getElementById('total-departamentos').textContent = 1; // Apenas seu departamento
+            }
             
-            const departamentos = [...new Set(funcionarios.map(f => f.departamento))];
-            document.getElementById('total-departamentos').textContent = departamentos.length;
-            
-            // Tabela de funcionários
+            // Tabela de funcionários - filtrar de acordo com o cargo
             const tabela = document.getElementById('tabela-funcionarios');
             tabela.innerHTML = '';
             
-            funcionarios.forEach(funcionario => {
+            let funcionariosParaExibir = [];
+            if (temAcessoRH() || usuarioLogado.cargo === 'CEO') {
+                funcionariosParaExibir = funcionarios;
+            } else {
+                funcionariosParaExibir = funcionarios.filter(f => f.departamento === usuarioLogado.departamento);
+            }
+            
+            funcionariosParaExibir.forEach(funcionario => {
                 const elogios = feedbacks.filter(f => f.para == funcionario.id && f.tipo === 'elogio').length;
                 const sugestoes = feedbacks.filter(f => f.de == funcionario.id && f.tipo === 'sugestao').length;
                 
@@ -1175,12 +1208,16 @@
                     <td class="py-3 px-4">${elogios}</td>
                     <td class="py-3 px-4">${sugestoes}</td>
                     <td class="py-3 px-4">
+                        ${temAcessoRH() ? `
                         <button onclick="editarFuncionario(${funcionario.id})" class="text-blue-600 hover:text-blue-800 mr-2">
                             <i class="fas fa-edit"></i>
                         </button>
+                        ` : ''}
+                        ${temAcessoRH() ? `
                         <button onclick="confirmarExclusaoFuncionario(${funcionario.id})" class="text-red-600 hover:text-red-800">
                             <i class="fas fa-trash-alt"></i>
                         </button>
+                        ` : ''}
                     </td>
                 `;
                 tabela.appendChild(row);
@@ -1195,7 +1232,10 @@
         
         // Funções auxiliares RH
         function editarFuncionario(id) {
-            if (!verificarAcessoRH()) return;
+            if (!temAcessoRH()) {
+                alert('Acesso restrito ao RH e CEO.');
+                return;
+            }
             
             const funcionario = funcionarios.find(f => f.id == id);
             if (funcionario) {
@@ -1207,6 +1247,13 @@
                 document.getElementById('funcionario-data-admissao').value = funcionario.dataAdmissao;
                 document.getElementById('funcionario-senha-container').style.display = 'none';
                 
+                // Desabilita edição de cargo para não-RH
+                if (!temAcessoRH()) {
+                    document.getElementById('funcionario-cargo').disabled = true;
+                } else {
+                    document.getElementById('funcionario-cargo').disabled = false;
+                }
+                
                 mostrarModalCadastroFuncionario();
             }
         }
@@ -1214,7 +1261,10 @@
         function salvarFuncionario(e) {
             e.preventDefault();
             
-            if (!verificarAcessoRH()) return;
+            if (!temAcessoRH()) {
+                alert('Acesso restrito ao RH e CEO.');
+                return;
+            }
             
             const id = document.getElementById('funcionario-id').value;
             const nome = document.getElementById('funcionario-nome').value;
@@ -1223,6 +1273,24 @@
             const departamento = document.getElementById('funcionario-departamento').value;
             const cargo = document.getElementById('funcionario-cargo').value;
             const dataAdmissao = document.getElementById('funcionario-data-admissao').value;
+            
+            const funcionarioOriginal = id ? funcionarios.find(f => f.id == id) : null;
+            
+            // Verificar se é uma promoção para Gerente
+            if (funcionarioOriginal && cargo === 'Gerente' && funcionarioOriginal.cargo !== 'Gerente') {
+                if (!temAcessoRH()) {
+                    alert('Apenas o RH pode aprovar promoções para Gerente.');
+                    return;
+                }
+            }
+            
+            // Verificar se está tentando modificar um funcionário de outro departamento
+            if (funcionarioOriginal && 
+                !temAcessoRH() && 
+                funcionarioOriginal.departamento !== usuarioLogado.departamento) {
+                alert('Você só pode gerenciar funcionários do seu próprio departamento.');
+                return;
+            }
             
             if (id) {
                 // Edição
@@ -1261,7 +1329,17 @@
         }
         
         function confirmarExclusaoFuncionario(id) {
-            if (!verificarAcessoRH()) return;
+            if (!temAcessoRH()) {
+                alert('Acesso restrito ao RH e CEO.');
+                return;
+            }
+            
+            const funcionario = funcionarios.find(f => f.id == id);
+            
+            if (funcionario && funcionario.cargo === 'CEO') {
+                alert('Não é possível remover o CEO.');
+                return;
+            }
             
             if (confirm('Tem certeza que deseja remover este funcionário?')) {
                 funcionarios = funcionarios.filter(f => f.id != id);
