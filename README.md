@@ -1,58 +1,58 @@
-# Connect+ | Plataforma de Comunicação e Feedback Corporativo
+# Connect+ | Plataforma de Comunicação (Seed by DeepSeek AI)
 
 ## 📝 Descrição
 
-**Connect+** é uma plataforma web de comunicação interna projetada para fortalecer a cultura de feedback em ambientes corporativos. Através dela, os colaboradores podem enviar elogios, sugestões e críticas construtivas, de forma anônima ou identificada, promovendo um ambiente de trabalho mais transparente e colaborativo.
+**Connect+** é uma plataforma web de comunicação interna, cujo código inicial foi gerado pela IA DeepSeek como um estudo de caso. O objetivo é fortalecer a cultura de feedback em ambientes corporativos, permitindo que colaboradores enviem elogios, sugestões e críticas de forma transparente e colaborativa.
 
-A aplicação conta com diferentes níveis de acesso (Colaborador, Gerente, RH e CEO), garantindo que as informações sensíveis sejam acessadas apenas por quem tem permissão.
+A aplicação, originalmente contida em um único arquivo, foi refatorada para uma estrutura modular e escalável, demonstrando boas práticas de organização de código. O projeto conta com diferentes níveis de acesso (Colaborador, Gerente, RH e CEO).
 
 ---
 
 ## ⚙️ Principais Funcionalidades
 
-- **Autenticação:** Sistema de login e cadastro de usuários com perfis e permissões.
-- **Dashboard Interativo:** Visualização rápida de estatísticas pessoais, como elogios recebidos, feedbacks enviados e um ranking de colaboradores.
-- **Envio de Feedback:** Formulário intuitivo para enviar:
-    - **Elogios:** Reconheça o bom trabalho dos colegas.
-    - **Sugestões:** Proponha melhorias para a empresa.
-    - **Críticas Construtivas:** Forneça feedbacks para o desenvolvimento profissional.
-- **Envio Anônimo:** Opção para garantir a privacidade do remetente.
-- **Histórico:** Tela para o usuário visualizar todos os feedbacks que já enviou.
-- **Painel de Reconhecimento:** Destaques como "Colaborador do Mês", "Mais Elogiado" e os últimos elogios públicos.
-- **Painel de RH (Acesso Restrito):**
-    - Gerenciamento completo de funcionários (adicionar, editar, remover).
-    - Visualização de estatísticas gerais da empresa.
-    - Acesso a relatórios e gráficos sobre o engajamento e tipos de feedback.
+- **Autenticação:** Sistema de login e cadastro com diferentes perfis e permissões.
+- **Dashboard Interativo:** Visualização de estatísticas, feedbacks recentes e ranking de colaboradores.
+- **Envio de Feedback:** Formulário para envio de elogios, sugestões e críticas, com opção de anonimato.
+- **Histórico Pessoal:** Tela para o usuário visualizar todos os feedbacks que já enviou.
+- **Painel de RH (Acesso Restrito):** Gerenciamento de funcionários e visualização de estatísticas gerais da empresa.
 
 ---
 
 ## 💻 Tecnologias e Linguagens Utilizadas
 
 - **Frontend:**
-    - **HTML5:** Estruturação semântica do conteúdo.
-    - **Tailwind CSS:** Framework CSS para estilização rápida e responsiva.
-    - **JavaScript (Vanilla):** Manipulação do DOM, lógica da aplicação e interatividade.
+    - **HTML5:** Estruturação semântica.
+    - **Tailwind CSS:** Framework CSS (via CDN).
+    - **JavaScript (Vanilla):** Lógica da aplicação, dividida em módulos para melhor organização.
 - **Ícones:**
-    - **Font Awesome:** Biblioteca de ícones vetoriais.
+    - **Font Awesome:** Biblioteca de ícones.
+- **Origem do Código:**
+    - **DeepSeek AI:** Geração do código base inicial.
 
 ---
 
 ## 📁 Estrutura de Pastas e Arquivos
 
-O projeto está estruturado como uma **Single Page Application (SPA)**, onde toda a interface e lógica rodam em um único arquivo:
+Para tornar o projeto mais profissional e fácil de manter, o código original foi refatorado para a seguinte estrutura:
 
 ```
 /
-└── index.html
+├── index.html              # Estrutura principal da página
+├── css/
+│   └── style.css           # Estilos customizados
+└── js/
+    ├── main.js             # Ponto de entrada, inicializa a aplicação
+    ├── ui.js               # Funções que manipulam o DOM (telas, modais)
+    ├── auth.js             # Lógica de autenticação (login, cadastro, logout)
+    └── data.js             # Simulação do "banco de dados" (arrays de dados)
 ```
-
-- `index.html`: Contém a estrutura HTML, os estilos CSS (via CDN do Tailwind) e todo o código JavaScript que gerencia as telas, dados e interações do usuário.
+- **`index.html`**: Contém apenas a estrutura HTML e os links para os arquivos CSS e JS.
+- **`css/style.css`**: Armazena as regras de estilo que antes estavam na tag `<style>`.
+- **`js/`**: Pasta que contém os scripts divididos por responsabilidade, tornando o código mais legível e manutenível.
 
 ---
 
 ## ▶️ Passo a Passo de Execução
-
-Como este é um projeto front-end autocontido, não há necessidade de um servidor ou de instalar dependências.
 
 1.  Clone o repositório:
     ```bash
@@ -62,6 +62,6 @@ Como este é um projeto front-end autocontido, não há necessidade de um servid
     ```bash
     cd seu-repositorio
     ```
-3.  Abra o arquivo `index.html` diretamente em seu navegador de preferência (Google Chrome, Firefox, etc.).
+3.  Abra o arquivo `index.html` diretamente em seu navegador.
 
-A aplicação carregará e você poderá interagir com as contas de teste pré-configuradas na tela de login.
+A aplicação carregará e você poderá interagir com as contas de teste pré-configuradas.
